@@ -1,0 +1,141 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String      @id @default(uuid()) @db.Uuid
+  fullName     String      @map("full_name") @db.VarChar(150)
+  email        String      @unique @db.VarChar(255)
+  passwordHash String      @map("password_hash")
+  role         UserRole    @default(ADMIN)
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime    @updatedAt @map("updated_at") @db.Timestamptz(6)
+  auditLogs    AuditLog[]
+  reviews      ApplicationReview[]
+  @@map("users")
+}
+
+model Category {
+  id          String      @id @default(uuid()) @db.Uuid
+  name        String      @unique @db.VarChar(100)
+  slug        String      @unique @db.VarChar(120)
+  description String?
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(6)
+  applicants  Applicant[]
+  @@map("categories")
+}
+
+model Applicant {
+  id                  String              @id @default(uuid()) @db.Uuid
+  referenceNumber     String              @unique @map("reference_number") @db.VarChar(30)
+  fullName            String              @map("full_name") @db.VarChar(150)
+  email               String              @db.VarChar(255)
+  phone               String              @db.VarChar(30)
+  dateOfBirth         DateTime?            @map("date_of_birth") @db.Date
+  location            String              @db.VarChar(150)
+  lga                 String?             @db.VarChar(100)
+  nasarawaConnection  NasarawaConnection  @map("nasarawa_connection")
+  profession          String              @db.VarChar(150)
+  categoryId          String              @map("category_id") @db.Uuid
+  achievements        String
+  proposedTopic       String              @map("proposed_topic")
+  motivation          String
+  status              ApplicationStatus   @default(SUBMITTED)
+  privacyConsent      Boolean             @default(false) @map("privacy_consent")
+  mediaConsent        Boolean             @default(false) @map("media_consent")
+  createdAt           DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt           DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+  category            Category            @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  reviews             ApplicationReview[]
+  @@index([status, createdAt])
+  @@index([email])
+  @@map("applicants")
+}
+
+model Nomination {
+  id              String           @id @default(uuid()) @db.Uuid
+  referenceNumber String           @unique @map("reference_number") @db.VarChar(30)
+  nominatorName   String           @map("nominator_name") @db.VarChar(150)
+  nominatorEmail  String           @map("nominator_email") @db.VarChar(255)
+  nomineeName     String           @map("nominee_name") @db.VarChar(150)
+  nomineeEmail    String?          @map("nominee_email") @db.VarChar(255)
+  nomineeProfession String?        @map("nominee_profession") @db.VarChar(150)
+  nomineeLocation String?           @map("nominee_location") @db.VarChar(150)
+  reason          String
+  supportingUrl   String?          @map("supporting_url")
+  status          NominationStatus @default(SUBMITTED)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  @@index([status, createdAt])
+  @@map("nominations")
+}
+
+model ApplicationReview {
+  id          String    @id @default(uuid()) @db.Uuid
+  applicantId String    @map("applicant_id") @db.Uuid
+  userId      String    @map("user_id") @db.Uuid
+  note        String?
+  fromStatus  ApplicationStatus? @map("from_status")
+  toStatus    ApplicationStatus @map("to_status")
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  applicant   Applicant @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Restrict)
+  @@index([applicantId, createdAt])
+  @@map("application_reviews")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  userId       String?  @map("user_id") @db.Uuid
+  action       String   @db.VarChar(100)
+  resourceType String   @map("resource_type") @db.VarChar(100)
+  resourceId   String?  @map("resource_id") @db.Uuid
+  details      Json?
+  ipAddress    String?  @map("ip_address") @db.VarChar(64)
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  @@index([createdAt])
+  @@index([resourceType, resourceId])
+  @@map("audit_logs")
+}
+
+enum UserRole {
+  ADMIN
+  EDITOR
+  RESEARCH_OFFICER
+  PRODUCER
+  CONTENT_EDITOR
+}
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  ADDITIONAL_INFORMATION_REQUIRED
+  SHORTLISTED
+  APPROVED
+  INVITED
+  ACCEPTED
+  SCHEDULED
+  INTERVIEWED
+  DECLINED
+  NOT_SELECTED
+}
+enum NominationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  CONTACT_REQUIRED
+  CONVERTED
+  DECLINED
+}
+enum NasarawaConnection {
+  INDIGENE
+  BORN_IN_NASARAWA
+  LIVES_IN_NASARAWA
+  WORKS_IN_NASARAWA
+  CONTRIBUTOR
+}

@@ -1,0 +1,42 @@
+{
+  "name": "wiwin-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "WHO IS WHO IN NASARAWA - Milestone 1",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "nodemon server/src/index.js",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "start": "node server/src/index.js",
+    "prisma:generate": "prisma generate --schema server/prisma/schema.prisma",
+    "prisma:migrate": "prisma migrate deploy --schema server/prisma/schema.prisma",
+    "prisma:dev": "prisma migrate dev --schema server/prisma/schema.prisma",
+    "seed:admin": "node server/src/seedAdmin.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.8.1",
+    "connect-pg-simple": "^10.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
+    "express-session": "^1.18.2",
+    "helmet": "^8.1.0",
+    "nodemailer": "^10.6.1",
+    "pg": "^8.16.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.1",
+    "concurrently": "^9.2.1",
+    "nodemon": "^3.1.10",
+    "prisma": "^6.19.0"
+  }
+}
